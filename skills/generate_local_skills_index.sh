@@ -5,6 +5,14 @@ SKILLS_DIR="${HOME}/.codex/skills"
 OUTPUT_FILE="${1:-/Users/sammilv/Documents/New project/skills/LOCAL_SKILLS_INDEX.md}"
 TIMESTAMP="$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z')"
 TMP_FILE="$(mktemp)"
+COMPARE_NEW="$(mktemp)"
+COMPARE_OLD="$(mktemp)"
+
+cleanup() {
+  rm -f "$TMP_FILE" "$COMPARE_NEW" "$COMPARE_OLD"
+}
+
+trap cleanup EXIT
 
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
@@ -59,6 +67,16 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
     printf 'No custom local skills found.\n'
   fi
 } > "$TMP_FILE"
+
+if [ -f "$OUTPUT_FILE" ]; then
+  sed '/^- Last updated: `/d' "$TMP_FILE" > "$COMPARE_NEW"
+  sed '/^- Last updated: `/d' "$OUTPUT_FILE" > "$COMPARE_OLD"
+
+  if cmp -s "$COMPARE_NEW" "$COMPARE_OLD"; then
+    printf 'No substantive changes in %s\n' "$OUTPUT_FILE"
+    exit 0
+  fi
+fi
 
 mv "$TMP_FILE" "$OUTPUT_FILE"
 printf 'Updated %s\n' "$OUTPUT_FILE"
