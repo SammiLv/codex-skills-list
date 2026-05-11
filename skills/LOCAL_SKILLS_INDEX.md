@@ -2,7 +2,7 @@
 
 Auto-generated from `/Users/sammilv/.codex/skills`.
 
-- Last updated: `2026-05-11 14:26:11 CST`
+- Last updated: `2026-05-11 14:34:31 CST`
 - Trigger convention: use `$skill-name` to explicitly invoke a local skill.
 - Scope: custom local skills only; built-in system skills and plugin skills are excluded.
 
