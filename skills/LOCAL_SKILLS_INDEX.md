@@ -1,17 +1,25 @@
-# Local Skills Index
+# Custom Local Skills
 
 Auto-generated from `/Users/sammilv/.codex/skills`.
 
-- Last updated: `2026-05-11 14:34:31 CST`
+- Last updated: `2026-05-11 16:17:39 CST`
 - Trigger convention: use `$skill-name` to explicitly invoke a local skill.
-- Scope: custom local skills only; built-in system skills and plugin skills are excluded.
+- Scope: custom local skills only.
+- Excluded: built-in system skills and plugin skills.
 
 ## Skill List
 
-### Weekly Report Summary
+### dingtalk-personal-weekly-report
 
-- Trigger: `$Weekly Report Summary`
+- Trigger: `$dingtalk-personal-weekly-report`
+- Path: `/Users/sammilv/.codex/skills/dingtalk-personal-weekly-report/SKILL.md`
+- Description: Use when the user wants a personal weekly report generated from DingTalk communication records, especially chat/group-chat based work summaries that need to be organized into the four sections 发现与解决问题、业务与培训、管理与协作、学习与创新, with optional traceable ledger items and DingTalk Docs output.
+- Purpose: No purpose summary found.
+
+### 产品部周报汇总
+
+- Trigger: `$产品部周报汇总`
 - Path: `/Users/sammilv/.codex/skills/weekly-report-summary/SKILL.md`
-- Description: Use when the user invokes $Weekly Report Summary to archive received weekly reports into DingTalk docs first, then summarize them into a department weekly report using the fixed 产品部周报汇总 template.
+- Description: Use when the user invokes $产品部周报汇总 to archive received weekly reports into DingTalk docs first, then summarize them into a department weekly report using the fixed 产品部周报汇总 template.
 - Purpose: Use this skill to process multiple received work reports and produce:
 

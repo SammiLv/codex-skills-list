@@ -17,11 +17,12 @@ trap cleanup EXIT
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 {
-  printf '# Local Skills Index\n\n'
+  printf '# Custom Local Skills\n\n'
   printf 'Auto-generated from `%s`.\n\n' "$SKILLS_DIR"
   printf -- '- Last updated: `%s`\n' "$TIMESTAMP"
   printf -- '- Trigger convention: use `$skill-name` to explicitly invoke a local skill.\n'
-  printf -- '- Scope: custom local skills only; built-in system skills and plugin skills are excluded.\n\n'
+  printf -- '- Scope: custom local skills only.\n'
+  printf -- '- Excluded: built-in system skills and plugin skills.\n\n'
   printf '## Skill List\n\n'
 
   found_any=0
