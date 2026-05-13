@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="/Users/sammilv/Documents/New project"
+REPO_DIR="/Users/sammilv/Desktop/百度云盘/MacbookPro/AIStudy/Skills列表"
 SKILLS_DIR="skills"
 INDEX_SCRIPT="$REPO_DIR/skills/generate_local_skills_index.sh"
 BRANCH="$(git -C "$REPO_DIR" branch --show-current)"

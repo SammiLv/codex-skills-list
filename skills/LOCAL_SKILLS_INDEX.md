@@ -2,7 +2,7 @@
 
 Auto-generated from `/Users/sammilv/.codex/skills`.
 
-- Last updated: `2026-05-11 16:17:39 CST`
+- Last updated: `2026-05-13 12:37:49 CST`
 - Trigger convention: use `$skill-name` to explicitly invoke a local skill.
 - Scope: custom local skills only.
 - Excluded: built-in system skills and plugin skills.
@@ -13,7 +13,7 @@ Auto-generated from `/Users/sammilv/.codex/skills`.
 
 - Trigger: `$dingtalk-personal-weekly-report`
 - Path: `/Users/sammilv/.codex/skills/dingtalk-personal-weekly-report/SKILL.md`
-- Description: Use when the user wants a personal weekly report generated from DingTalk communication records, especially chat/group-chat based work summaries that need to be organized into the four sections 发现与解决问题、业务与培训、管理与协作、学习与创新, with optional traceable ledger items and DingTalk Docs output.
+- Description: Use when the user wants a personal weekly report generated from DingTalk communication records and calendar events, especially chat/group-chat based work summaries that need to be organized into the four sections 发现与解决问题、业务与培训、管理与协作、学习与创新, with optional traceable ledger items and DingTalk Docs output.
 - Purpose: No purpose summary found.
 
 ### 产品部周报汇总

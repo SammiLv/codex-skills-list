@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SKILLS_DIR="${HOME}/.codex/skills"
-OUTPUT_FILE="${1:-/Users/sammilv/Documents/New project/skills/LOCAL_SKILLS_INDEX.md}"
+OUTPUT_FILE="${1:-/Users/sammilv/Desktop/百度云盘/MacbookPro/AIStudy/Skills列表/skills/LOCAL_SKILLS_INDEX.md}"
 TIMESTAMP="$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z')"
 TMP_FILE="$(mktemp)"
 COMPARE_NEW="$(mktemp)"
