@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex每日工作总结"
+  short_description: "总结昨天的 Codex 工作"
+  default_prompt: "Use $daily-codex-work-summary to summarize yesterday's Codex work in this conversation."
