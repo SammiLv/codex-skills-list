@@ -1,6 +1,6 @@
 ---
 name: daily-codex-work-summary
-description: Generate a daily Chinese work summary from the user's Codex activity, defaulting to yesterday's work, and display the summary in the current conversation. Use when the user asks to summarize what they did in Codex yesterday, today, on a specific date, or asks for a daily Codex work report, Codex daily review, work log, or end-of-day recap based on Codex sessions.
+description: Generate a daily Chinese work summary from the user's Codex activity, defaulting to the most recent prior day with concrete work (starting from yesterday), and display the summary in the current conversation. Use when the user asks to summarize what they did in Codex yesterday, today, on a specific date, or asks for a daily Codex work report, Codex daily review, work log, or end-of-day recap based on Codex sessions.
 ---
 
 # Daily Codex Work Summary
@@ -13,11 +13,13 @@ Create a concise, useful Chinese daily report from local Codex session records a
 
 1. Resolve the target date.
    - Default to yesterday's local date from the active environment context.
+   - If yesterday has no concrete Codex work, keep moving backward one local day at a time until you find the most recent date with concrete work, and summarize that day instead.
    - Respect explicit dates such as "今天", "上周五", or "2026-05-15"; clarify with absolute dates when there is ambiguity.
 
 2. Gather local Codex activity.
-   - Prefer running `scripts/collect_codex_activity.py --format markdown` for the default yesterday summary.
+   - Prefer running `scripts/collect_codex_activity.py --format markdown` for the default summary flow, but do not stop at the first empty day.
    - Use `scripts/collect_codex_activity.py --date YYYY-MM-DD --format markdown` when the user asks for a specific date.
+   - For the default summary flow, if the first checked date has no concrete work, continue checking earlier dates until you find one with concrete work.
    - The script reads `${CODEX_HOME:-~/.codex}/sessions/YYYY/MM/DD/*.jsonl` and `${CODEX_HOME:-~/.codex}/session_index.jsonl`.
    - If the script cannot run, manually inspect the same files. Do not use network access.
 
@@ -64,7 +66,8 @@ For a shorter user request, return a compact paragraph plus bullets. For a detai
 - Mention paths only when they are useful deliverables or changed files.
 - Keep speculation out of the report. Use "看起来" or "可能" only when the session evidence is incomplete.
 - Preserve privacy: do not quote secrets, tokens, private config values, or long message bodies.
-- If no Codex sessions are found for the target date, say that clearly and mention which local date was checked.
+- For the default summary flow, clearly state the final summarized date if it was backtracked from yesterday because intermediate dates had no concrete work.
+- If no Codex sessions with concrete work are found after backtracking, say that clearly and mention the checked date range.
 
 ## Resources
 

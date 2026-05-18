@@ -1,6 +1,6 @@
 # 个人本地 Skills 清单
 
-最后更新时间：2026-05-15 13:12:18 CST
+最后更新时间：2026-05-18 11:11:54 CST
 
 本文件记录当前个人创建或安装在本地的 Codex skills。范围为 `/Users/sammilv/.codex/skills` 下的个人 skills，不包含系统内置 skills 和插件 skills。
 
@@ -15,6 +15,12 @@
 - 触发器：`$daily-codex-work-summary`
 - 路径：`/Users/sammilv/.codex/skills/daily-codex-work-summary/SKILL.md`
 - 概述：根据本地 Codex 会话记录生成中文工作日报，汇总指定日期完成的任务、产出物、验证情况和待跟进事项。
+
+### dingtalk-lxm-weekly-work-summary
+
+- 触发器：`$dingtalk-lxm-weekly-work-summary`
+- 路径：`/Users/sammilv/.codex/skills/dingtalk-lxm-weekly-work-summary/SKILL.md`
+- 概述：该 skill 已被识别，但尚未配置中文概述；请根据对应 SKILL.md 补充。
 
 ### dingtalk-personal-weekly-report
 
@@ -33,6 +39,12 @@
 - 触发器：`$reserve-dingtalk-meeting`
 - 路径：`/Users/sammilv/.codex/skills/reserve-dingtalk-meeting/SKILL.md`
 - 概述：根据会议时间与参会人自动创建钉钉会议：查询会议室空闲、选择合适房间、完成预订与邀请。
+
+### weekly-codex-work-summary
+
+- 触发器：`$weekly-codex-work-summary`
+- 路径：`/Users/sammilv/.codex/skills/weekly-codex-work-summary/SKILL.md`
+- 概述：该 skill 已被识别，但尚未配置中文概述；请根据对应 SKILL.md 补充。
 
 ### 产品部周报汇总
 

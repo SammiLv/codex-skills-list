@@ -49,7 +49,7 @@ Use whichever loaded MCP server exposes these calendar operations:
 - `list_suggested_event_times`
 - `list_calendar_events`
 
-If attendee lookup needs a non-calendar DingTalk MCP tool, inspect that tool schema first and use it only to resolve names into supported participant identifiers such as `userId` or `openDingTalkId`.
+For attendee lookup, use the DingTalk contacts MCP service when available. In this environment it is commonly named `dingtalk-contacts-mcp`. Inspect the contacts tool schema first, search invitees by the user's supplied names, phone numbers, emails, or other clues, and use the returned supported participant identifiers such as `userId` or `openDingTalkId` when creating the meeting or adding participants.
 
 If no DingTalk calendar MCP tools are available in the current conversation, stop and tell the user that the MCP tools need to be reloaded or the conversation needs to be restarted with the rebuilt MCP configuration. Do not create the meeting through Computer Use as an automatic fallback.
 
@@ -79,6 +79,8 @@ Resolve invited people before creating the event.
 
 Rules:
 
+- Use `dingtalk-contacts-mcp` to look up every requested invitee before creating the calendar event.
+- Add resolved contacts to the meeting by passing their supported DingTalk identifiers to `create_calendar_event` or `add_calendar_participant`.
 - Do not assume a plain Chinese name can be passed directly to calendar APIs.
 - Do not assume DingTalk AI-style `@Name` mentions can be passed directly to structured MCP fields.
 - Prefer exact DingTalk user identifiers returned by lookup tools.
@@ -122,7 +124,7 @@ Do not ask the user to choose a room unless every suitable room is unavailable o
 
 1. Parse the user request into title, time range, and invitees.
 2. Apply defaults for omitted optional fields.
-3. Resolve attendees to DingTalk identifiers when possible; keep unresolved invitees as pending attendees.
+3. Use `dingtalk-contacts-mcp` to resolve attendees to DingTalk identifiers when possible; keep unresolved invitees as pending attendees.
 4. Check organizer/calendar conflicts for the target time with `list_calendar_events` or `query_busy_status` when available.
 5. If there is a conflict, tell the user the conflicting event title/time and ask whether to keep both or reschedule.
 6. Query available rooms and choose one using the Automatic Room Selection rules.

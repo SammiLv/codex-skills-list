@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect readable Codex session excerpts for a daily work summary."""
+"""Collect readable Codex session excerpts for a weekly work summary."""
 
 from __future__ import annotations
 
@@ -11,9 +11,6 @@ import os
 import re
 from pathlib import Path
 from typing import Any
-
-
-MAX_LOOKBACK_DAYS = 365
 
 
 def codex_home(value: str | None) -> Path:
@@ -58,6 +55,12 @@ SENSITIVE_PATTERNS = [
     (re.compile(r"(sk-[A-Za-z0-9_-]{12,})"), "[REDACTED]"),
     (re.compile(r"\\b[a-f0-9]{48,}\\b", re.IGNORECASE), "[REDACTED]"),
 ]
+
+INTERNAL_REQUEST_PREFIXES = (
+    "The following is the Codex agent history",
+    "<skill>",
+    "# AGENTS.md instructions",
+)
 
 
 def redact(text: str) -> str:
@@ -109,6 +112,11 @@ def parse_session(path: Path, index: dict[str, dict[str, Any]], excerpt_limit: i
 
     session_id = meta.get("id") or path.stem.split("-")[-1]
     indexed = index.get(session_id, {})
+    filtered_users = [
+        text for text in users
+        if not any(text.startswith(prefix) for prefix in INTERNAL_REQUEST_PREFIXES)
+    ]
+
     return {
         "id": session_id,
         "path": str(path),
@@ -116,64 +124,43 @@ def parse_session(path: Path, index: dict[str, dict[str, Any]], excerpt_limit: i
         "started_at": meta.get("timestamp"),
         "updated_at": indexed.get("updated_at"),
         "cwd": meta.get("cwd"),
-        "user_requests": [trim(text, excerpt_limit) for text in users[:6]],
+        "user_requests": [trim(text, excerpt_limit) for text in filtered_users[:6]],
         "assistant_final": trim(assistants[-1], excerpt_limit) if assistants else "",
         "tool_hints": tool_hints[:12],
     }
 
 
-def session_paths(home: Path, date_text: str) -> list[Path]:
+def has_user_work(session: dict[str, Any]) -> bool:
+    return bool(session.get("user_requests"))
+
+
+def session_paths_for_date(home: Path, date_text: str) -> list[Path]:
     target = dt.date.fromisoformat(date_text)
     pattern = home / "sessions" / f"{target:%Y}" / f"{target:%m}" / f"{target:%d}" / "*.jsonl"
     return [Path(p) for p in sorted(glob.glob(str(pattern)))]
 
 
-def has_concrete_work(session: dict[str, Any]) -> bool:
-    return bool(session.get("user_requests") or session.get("assistant_final") or session.get("tool_hints"))
+def dates_between(start: dt.date, end: dt.date) -> list[dt.date]:
+    if end < start:
+        raise ValueError("--end must be on or after --start")
+    days = (end - start).days
+    return [start + dt.timedelta(days=offset) for offset in range(days + 1)]
 
 
-def collect_sessions_for_date(
-    home: Path, index: dict[str, dict[str, Any]], date_text: str, excerpt_limit: int
-) -> list[dict[str, Any]]:
-    return [parse_session(path, index, excerpt_limit) for path in session_paths(home, date_text)]
+def week_bounds(today: dt.date, week: str) -> tuple[dt.date, dt.date]:
+    monday = today - dt.timedelta(days=today.weekday())
+    if week == "last":
+        start = monday - dt.timedelta(days=7)
+        return start, start + dt.timedelta(days=6)
+    return monday, today
 
 
-def find_recent_workday(
-    home: Path, index: dict[str, dict[str, Any]], start_date: dt.date, excerpt_limit: int, max_lookback_days: int
-) -> tuple[str | None, list[dict[str, Any]], list[str]]:
-    checked_dates: list[str] = []
-    for offset in range(max_lookback_days + 1):
-        current = start_date - dt.timedelta(days=offset)
-        date_text = current.isoformat()
-        checked_dates.append(date_text)
-        sessions = collect_sessions_for_date(home, index, date_text, excerpt_limit)
-        if any(has_concrete_work(session) for session in sessions):
-            return date_text, sessions, checked_dates
-    return None, [], checked_dates
-
-
-def render_markdown(
-    sessions: list[dict[str, Any]], date_text: str, checked_dates: list[str] | None = None, requested_date: str | None = None
-) -> str:
-    lines = [f"# Codex activity for {date_text}", ""]
+def render_markdown(sessions: list[dict[str, Any]], start: dt.date, end: dt.date) -> str:
+    range_text = f"{start.isoformat()} to {end.isoformat()}"
+    lines = [f"# Codex activity for {range_text}", ""]
     if not sessions:
-        if checked_dates and len(checked_dates) > 1:
-            lines.append(
-                "No local Codex sessions with concrete work were found "
-                f"from {checked_dates[0]} back to {checked_dates[-1]}."
-            )
-        else:
-            lines.append(f"No local Codex sessions found for {date_text}.")
+        lines.append(f"No local Codex sessions found for {range_text}.")
         return "\n".join(lines)
-    if requested_date and requested_date != date_text:
-        lines.extend(
-            [
-                f"- Requested default date: {requested_date}",
-                f"- Final summarized date: {date_text}",
-                f"- Backtracked empty dates: {', '.join(checked_dates[:-1])}",
-                "",
-            ]
-        )
     for idx, session in enumerate(sessions, 1):
         lines.extend(
             [
@@ -203,60 +190,39 @@ def render_markdown(
 
 
 def main() -> int:
-    yesterday = (dt.date.today() - dt.timedelta(days=1)).isoformat()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--date", default=yesterday, help="Local date to collect, YYYY-MM-DD. Defaults to yesterday.")
+    parser.add_argument("--week", choices=["current", "last"], default="current", help="Week to collect. Defaults to current week, Monday through today.")
+    parser.add_argument("--start", help="Start date to collect, YYYY-MM-DD. Overrides --week when used with --end.")
+    parser.add_argument("--end", help="End date to collect, YYYY-MM-DD. Overrides --week when used with --start.")
     parser.add_argument("--codex-home", help="Codex home directory. Defaults to CODEX_HOME or ~/.codex.")
     parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
     parser.add_argument("--excerpt-limit", type=int, default=900)
-    parser.add_argument(
-        "--no-backtrack",
-        action="store_true",
-        help="Disable automatic backtracking for the default date flow and only inspect the requested date.",
-    )
-    parser.add_argument(
-        "--max-lookback-days",
-        type=int,
-        default=MAX_LOOKBACK_DAYS,
-        help="Maximum number of days to backtrack when the default date has no concrete work.",
-    )
     args = parser.parse_args()
+
+    if bool(args.start) != bool(args.end):
+        parser.error("--start and --end must be provided together")
+    if args.start and args.end:
+        start = dt.date.fromisoformat(args.start)
+        end = dt.date.fromisoformat(args.end)
+        dates = dates_between(start, end)
+    else:
+        start, end = week_bounds(dt.date.today(), args.week)
+        dates = dates_between(start, end)
 
     home = codex_home(args.codex_home)
     index = load_index(home)
-    requested_date = args.date
-    checked_dates = [requested_date]
-
-    if args.no_backtrack:
-        target_date = requested_date
-        sessions = collect_sessions_for_date(home, index, target_date, args.excerpt_limit)
-    else:
-        target_date, sessions, checked_dates = find_recent_workday(
-            home,
-            index,
-            dt.date.fromisoformat(requested_date),
-            args.excerpt_limit,
-            max(0, args.max_lookback_days),
-        )
-        if target_date is None:
-            target_date = requested_date
+    paths: list[Path] = []
+    for target in dates:
+        paths.extend(session_paths_for_date(home, target.isoformat()))
+    sessions = [
+        session for session in (parse_session(path, index, args.excerpt_limit) for path in paths)
+        if has_user_work(session)
+    ]
 
     if args.format == "json":
-        print(
-            json.dumps(
-                {
-                    "requested_date": requested_date,
-                    "date": target_date,
-                    "checked_dates": checked_dates,
-                    "backtracked": target_date != requested_date,
-                    "sessions": sessions,
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-        )
+        print(json.dumps({"start": start.isoformat(), "end": end.isoformat(), "sessions": sessions}, ensure_ascii=False, indent=2))
     else:
-        print(render_markdown(sessions, target_date, checked_dates=checked_dates, requested_date=requested_date))
+        print(render_markdown(sessions, start, end))
     return 0
 
 
