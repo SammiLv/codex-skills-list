@@ -147,12 +147,16 @@ def dates_between(start: dt.date, end: dt.date) -> list[dt.date]:
     return [start + dt.timedelta(days=offset) for offset in range(days + 1)]
 
 
+def rolling_week_bounds(today: dt.date) -> tuple[dt.date, dt.date]:
+    return today - dt.timedelta(days=6), today
+
+
 def week_bounds(today: dt.date, week: str) -> tuple[dt.date, dt.date]:
     monday = today - dt.timedelta(days=today.weekday())
     if week == "last":
         start = monday - dt.timedelta(days=7)
         return start, start + dt.timedelta(days=6)
-    return monday, today
+    return rolling_week_bounds(today)
 
 
 def render_markdown(sessions: list[dict[str, Any]], start: dt.date, end: dt.date) -> str:
@@ -191,7 +195,7 @@ def render_markdown(sessions: list[dict[str, Any]], start: dt.date, end: dt.date
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--week", choices=["current", "last"], default="current", help="Week to collect. Defaults to current week, Monday through today.")
+    parser.add_argument("--week", choices=["current", "last"], default="current", help="Week to collect. Defaults to the rolling 7-day period ending today.")
     parser.add_argument("--start", help="Start date to collect, YYYY-MM-DD. Overrides --week when used with --end.")
     parser.add_argument("--end", help="End date to collect, YYYY-MM-DD. Overrides --week when used with --start.")
     parser.add_argument("--codex-home", help="Codex home directory. Defaults to CODEX_HOME or ~/.codex.")

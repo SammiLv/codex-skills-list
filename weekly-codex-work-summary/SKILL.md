@@ -7,17 +7,17 @@ description: Generate a Chinese weekly work summary from the user's local Codex 
 
 ## Overview
 
-Create a concise, useful Chinese weekly report from local Codex session records. Focus on the user's actual work themes, completed outcomes, created or changed artifacts, verification, and follow-ups.
+Create a concise, useful Chinese weekly report from local Codex session records and publish it to a DingTalk document. Focus on the user's actual work themes, completed outcomes, created or changed artifacts, verification, and follow-ups.
 
 ## Workflow
 
 1. Resolve the target week or date range.
-   - Default to the current local week, Monday through today.
+   - Default to the 7-day period ending on the current local date, including today and the previous 6 days.
    - Respect explicit requests such as "本周", "上周", "这周", "最近一周", or "2026-05-11 到 2026-05-15".
    - Clarify with absolute dates when relative dates could be confusing.
 
 2. Gather local Codex activity.
-   - Prefer running `scripts/collect_codex_week_activity.py --format markdown` for the default current-week summary.
+   - Prefer running `scripts/collect_codex_week_activity.py --format markdown` for the default rolling 7-day summary ending today.
    - Use `scripts/collect_codex_week_activity.py --week last --format markdown` for last week.
    - Use `scripts/collect_codex_week_activity.py --start YYYY-MM-DD --end YYYY-MM-DD --format markdown` for a custom range.
    - The script reads `${CODEX_HOME:-~/.codex}/sessions/YYYY/MM/DD/*.jsonl` and `${CODEX_HOME:-~/.codex}/session_index.jsonl`.
@@ -34,16 +34,23 @@ Create a concise, useful Chinese weekly report from local Codex session records.
    - Distinguish completed work, partial work, blocked work, and investigation-only work.
    - Keep dates as supporting context, not the main structure, unless the user asks for a day-by-day report.
 
-5. Display the final summary directly in the current conversation.
+5. Publish the final summary to DingTalk Docs.
+   - Default document title: `吕夏苗codex周工作总结`.
+   - Default target folder: `https://alidocs.dingtalk.com/i/nodes/D1YKdxGX7EqVQZe2y71ZJe4QrZk95AzP`.
+   - Before creating a new fixed-name document, list the default target folder and delete any exact same-name document first, then create the replacement document in that folder with the final Markdown content.
+   - If same-name deletion is unavailable or blocked, stop and report the blocker instead of creating a suffixed duplicate.
+   - After creation, read the document back to verify the title and core content.
 
-6. Output in Chinese unless the user asks otherwise.
+6. Display the DingTalk document link and concise status in the current conversation.
+
+7. Output in Chinese unless the user asks otherwise.
 
 ## Report Format
 
 Use this format by default:
 
 ```markdown
-**Codex 工作周报｜YYYY-MM-DD 至 YYYY-MM-DD**
+**吕夏苗codex周工作总结**
 
 本周主要完成了：
 
