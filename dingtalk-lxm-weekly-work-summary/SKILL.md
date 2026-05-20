@@ -26,6 +26,24 @@ Collect from these sources when the corresponding MCP tools are available:
 7. `robotmessage` and `groupchat`: use group search and group metadata to locate likely work groups or project groups. Do not send robot messages or create groups.
 8. Chat records and `@我`: when a chat-history MCP is available, query direct chats, group chats, and messages where `吕夏苗` is mentioned. If MCP chat history is not available, use DingTalk desktop via Computer Use only if the user has asked for a live run and the UI is accessible.
 
+### Chat and Group Evidence Requirement
+
+For each run, actively check whether the current tool session exposes read-only DingTalk chat-history capabilities, including group messages, direct messages, and `@我` / mentions. Do not assume group-message access is unavailable from prior runs.
+
+If chat/group-message tools are available:
+
+- Query work-relevant group chats, direct chats, and `@吕夏苗` / `@我` messages within the report range.
+- Use group names, project names, meeting titles, approval titles, todo titles, and names discovered from structured evidence as search keywords.
+- Include only work-attributable evidence: messages sent by `吕夏苗`, messages explicitly assigning or mentioning her responsibility, decisions she made, blockers she handled, commitments she gave, or follow-ups assigned to her.
+- Paraphrase private chat content; do not quote sensitive chat text unless strictly necessary.
+- Add every usable chat item to the evidence ledger with source names such as `群聊 / 群名` or `单聊 / 人名`.
+
+If chat/group-message tools are not available:
+
+- State the exact limitation in `未覆盖/受限来源`, for example `当前未暴露群消息/聊天记录/@我读取接口`.
+- Do not silently omit chat/group evidence.
+- Do not create groups, send robot messages, or use write-only group tools as substitutes for evidence collection.
+
 ## Collection Workflow
 
 1. Compute the exact range in Beijing time and keep millisecond timestamps for MCP calls.
@@ -76,7 +94,7 @@ Avoid duplicating the same item across sections. Put it in the best-fit section 
 
 Default response in Chinese:
 
-1. Title: `吕夏苗个人周工作总结（YYYY年M月D日-YYYY年M月D日）`
+1. Title: `吕夏苗钉钉周工作总结（YYYY年M月D日-YYYY年M月D日）`
 2. `本周概览`: 3-5 sentences summarizing the main work themes and outcomes.
 3. Four fixed sections:
    - one concise paragraph
@@ -86,9 +104,23 @@ Default response in Chinese:
 
 Write formally enough to paste into a weekly report. Be concrete: include project names, meeting titles, approval/todo/log titles, deliverables, decisions, and follow-up status when available.
 
+## DingTalk Document Publishing
+
+When the user asks to publish the report to DingTalk Docs with a fixed document name, use replacement semantics:
+
+Default fixed document name: `吕夏苗钉钉周工作总结（mcp）`. Do not use `吕夏苗个人周工作总结（mcp）` unless the user explicitly overrides the name.
+
+1. List the target folder with `list_nodes`.
+2. Find every direct child node whose `name` exactly matches the requested document name.
+3. Delete all exact same-name nodes before creating the new report document.
+4. Create a fresh DingTalk online document with the requested fixed name and the final Markdown content.
+5. Read back the created document and report its URL.
+
+Do not overwrite an existing same-name document. Do not create a duplicate that DingTalk auto-renames with suffixes such as `(1)`. If the current session does not expose a DingTalk document deletion tool or deletion fails, stop before publishing and report the blocker clearly; do not fall back to overwrite, rename, or duplicate creation.
+
 ## Safety
 
 - Read-only by default.
-- Do not send DingTalk messages, create robots, create groups, change todos, modify approvals, create logs, or edit documents unless explicitly requested.
+- Do not send DingTalk messages, create robots, create groups, change todos, modify approvals, create logs, delete documents, create documents, or edit documents unless explicitly requested. When the user explicitly requests DingTalk Docs publication, document deletion and creation are allowed only for exact same-name replacement in the requested target folder.
 - Do not expose unnecessary personal or sensitive chat content. Summarize only work-relevant facts.
 - If a tool needs a `processCode` or similar schema identifier that is not known, first call the corresponding list/visible-process tool, then query likely forms.

@@ -1,7 +1,7 @@
 interface:
   display_name: "钉钉周工作总结（mcp）"
   short_description: "汇总lxm一周钉钉工作证据"
-  default_prompt: "Use $dingtalk-lxm-weekly-work-summary to summarize lxm's weekly work from DingTalk evidence."
+  default_prompt: "Use $dingtalk-lxm-weekly-work-summary to summarize lxm's weekly work from DingTalk evidence. Default DingTalk document name is `吕夏苗钉钉周工作总结（mcp）`; do not use `吕夏苗个人周工作总结（mcp）` unless explicitly overridden. If publishing to a fixed-name DingTalk document, delete exact same-name documents in the target folder before creating the replacement; if deletion is unavailable, stop and report the blocker. Always probe chat/group/@me read capabilities and document unavailable chat evidence explicitly."
 dependencies:
   tools:
     - type: "mcp"
