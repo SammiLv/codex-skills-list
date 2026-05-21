@@ -1,6 +1,6 @@
 # 个人本地 Skills 清单
 
-最后更新时间：2026-05-20 19:02:48 CST
+最后更新时间：2026-05-21 19:01:23 CST
 
 本文件记录当前个人创建或安装在本地的 Codex skills。范围为 `/Users/sammilv/.codex/skills` 下的个人 skills，不包含系统内置 skills 和插件 skills。
 
@@ -9,6 +9,12 @@
 - 排除：系统内置 skills 和插件 skills。
 
 ## Skill 列表
+
+### AI工具一周使用总结
+
+- 触发器：`$AI工具一周使用总结`
+- 路径：`/Users/sammilv/.codex/skills/all-ai-tools-weekly-summary/SKILL.md`
+- 概述：该 skill 已被识别，但尚未配置中文概述；请根据对应 SKILL.md 补充。
 
 ### daily-codex-work-summary
 
