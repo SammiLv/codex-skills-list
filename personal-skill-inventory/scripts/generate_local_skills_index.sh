@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SKILLS_DIR="${HOME}/.codex/skills"
+TOOL_NAME="${AI_TOOL_NAME:-Codex}"
+SKILLS_DIR="${AI_SKILLS_DIR:-${SKILLS_DIR:-${CODEX_HOME:-${HOME}/.codex}/skills}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-OUTPUT_FILE="${SKILL_DIR}/LOCAL_SKILLS_INDEX.md"
+DEFAULT_OUTPUT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+OUTPUT_FILE="${OUTPUT_FILE:-${DEFAULT_OUTPUT_DIR}/LOCAL_SKILLS_INDEX.md}"
 TIMESTAMP="$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z')"
 TMP_FILE="$(mktemp)"
 
@@ -14,62 +15,163 @@ cleanup() {
 
 trap cleanup EXIT
 
-overview_for() {
-  case "$1" in
-    daily-codex-work-summary)
-      printf '根据本地 Codex 会话记录生成中文工作日报，汇总指定日期完成的任务、产出物、验证情况和待跟进事项。'
-      ;;
-    dingtalk-personal-weekly-report)
-      printf '基于钉钉聊天、群聊、@消息、日程和相关文档生成个人周报，并按固定四类栏目组织内容。'
-      ;;
-    personal-skill-inventory)
-      printf '生成个人本地 skills 清单，记录每个 skill 的名称、概述、直接触发器和文件路径。'
-      ;;
-    reserve-dingtalk-meeting)
-      printf '根据会议时间与参会人自动创建钉钉会议：查询会议室空闲、选择合适房间、完成预订与邀请。'
-      ;;
-    产品部周报汇总)
-      printf '将收集到的周报先归档为钉钉文档，再按固定模板汇总生成产品部部门周报。'
-      ;;
-    *)
-      printf '该 skill 已被识别，但尚未配置中文概述；请根据对应 SKILL.md 补充。'
+if [ ! -d "$SKILLS_DIR" ]; then
+  printf '错误：skills 目录不存在：%s\n' "$SKILLS_DIR" >&2
+  printf '请通过 AI_SKILLS_DIR 或 SKILLS_DIR 指定当前 AI 工具的 skills 目录。\n' >&2
+  exit 1
+fi
+
+description_for() {
+  local skill_file="${1:-}"
+  [ -f "$skill_file" ] || return 0
+
+  awk '
+    NR == 1 && $0 == "---" { in_frontmatter=1; next; }
+    in_frontmatter && $0 == "---" { exit; }
+    in_frontmatter && /^description:[[:space:]]*/ {
+      sub(/^description:[[:space:]]*/, "");
+      gsub(/^["'\'']|["'\'']$/, "");
+      print;
+      exit;
+    }
+  ' "$skill_file"
+}
+
+is_self_built_skill() {
+  local skill_dir="${1:-}"
+  local skill_file="${skill_dir}/SKILL.md"
+  local base
+  base="$(basename "$skill_dir")"
+
+  case "$base" in
+    .system|cache|plugins|plugin-cache|node_modules|dws|.*)
+      return 1
       ;;
   esac
+
+  [ -f "$skill_file" ] || return 1
+
+  if awk '
+    NR == 1 && $0 == "---" { in_frontmatter=1; next; }
+    in_frontmatter && $0 == "---" { exit; }
+    in_frontmatter && /^name:[[:space:]]*/ {
+      sub(/^name:[[:space:]]*/, "");
+      gsub(/^["'\'']|["'\'']$/, "");
+      name=tolower($0);
+      gsub(/[[:space:]]+$/, "", name);
+      exit;
+    }
+    END { exit(name == "dws" ? 0 : 1); }
+  ' "$skill_file"; then
+    return 1
+  fi
+
+  if awk '
+    NR == 1 && $0 == "---" { in_frontmatter=1; next; }
+    in_frontmatter && $0 == "---" { exit; }
+    in_frontmatter {
+      line=tolower($0);
+      if (line ~ /^(system|builtin|plugin|marketplace|external)[[:space:]]*:[[:space:]]*true[[:space:]]*$/) found=1;
+      if (line ~ /^agent_created[[:space:]]*:[[:space:]]*false[[:space:]]*$/) found=1;
+      if (line ~ /^source[[:space:]]*:[[:space:]]*(system|plugin|marketplace|builtin|external)[[:space:]]*$/) found=1;
+      if (line ~ /^managed_by[[:space:]]*:[[:space:]]*(system|plugin|marketplace|builtin|external)[[:space:]]*$/) found=1;
+    }
+    END { exit(found ? 0 : 1); }
+  ' "$skill_file"; then
+    return 1
+  fi
+
+  return 0
+}
+
+concise_overview() {
+  local description="$1"
+  if [ -z "$description" ]; then
+    printf '该 skill 已被识别，但尚未配置清晰 description；请根据对应 SKILL.md 补充。'
+    return
+  fi
+
+  printf '%s' "$description" \
+    | tr '\n' ' ' \
+    | awk '{
+      text=$0;
+      gsub(/[[:space:]][[:space:]]*/, " ", text);
+      split_markers[1]="触发词：";
+      split_markers[2]="触发词:";
+      split_markers[3]="触发语包括：";
+      split_markers[4]="触发语包括:";
+      split_markers[5]="触发请求包括：";
+      split_markers[6]="触发请求包括:";
+      split_markers[7]="触发语包括";
+      split_markers[8]="触发请求包括";
+      split_markers[9]="Trigger on requests";
+      split_markers[10]="Trigger for requests";
+      split_markers[11]="Trigger on ";
+      split_markers[12]="Trigger when ";
+      split_markers[13]=", defaulting";
+      split_markers[14]="; defaulting";
+      split_markers[15]="，支持";
+      split_markers[16]="，包括";
+      split_markers[17]="，并";
+      split_markers[18]="，同步更新到";
+      split_markers[19]="。当用户说";
+      split_markers[20]=". The skill";
+      split_markers[21]=", identify";
+      split_markers[22]=", and";
+      split_markers[23]=" from a meeting time";
+      for (i=1; i<=23; i++) {
+        pos=index(text, split_markers[i]);
+        if (pos > 0) {
+          text=substr(text, 1, pos - 1);
+        }
+      }
+      sub(/^Use when the user wants to /, "", text);
+      sub(/^Use when /, "", text);
+      sub(/^the user invokes /, "", text);
+      sub(/^\$[^ ]+ or asks to /, "", text);
+      sub(/^当用户[^。]*时触发。/, "", text);
+      sub(/[[:space:]]+$/, "", text);
+      print text;
+    }'
 }
 
 markdown_escape() {
-  printf '%s' "$1" | sed 's/|/\\|/g'
+  local text="$1"
+  printf '%s' "${text//|/\\|}"
 }
 
 inline_code_escape() {
-  printf '%s' "$1" | sed 's/`/\\`/g'
+  local text="$1"
+  printf '%s' "${text//\`/\\\`}"
 }
 
 printf '开始执行本地 Skills 清单自动化任务\n'
+printf '当前 AI 工具：%s\n' "$TOOL_NAME"
 printf '扫描目录：%s\n' "$SKILLS_DIR"
 printf '目标文件：%s\n' "$OUTPUT_FILE"
+mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 {
-  printf '# 个人本地 Skills 清单\n\n'
+  printf '# %s 个人本地 Skills 清单\n\n' "$TOOL_NAME"
   printf '最后更新时间：%s\n\n' "$TIMESTAMP"
-  printf '本文件记录当前个人创建或安装在本地的 Codex skills。范围为 `%s` 下的个人 skills，不包含系统内置 skills 和插件 skills。\n\n' "$SKILLS_DIR"
+  printf '本文件仅记录当前由用户自建或个人维护的 %s skills。范围为 `%s` 下的自建 skills，不包含系统内置、插件、市场安装、缓存或外部托管的 skills。\n\n' "$TOOL_NAME" "$SKILLS_DIR"
   printf -- '- 触发器约定：使用 `$skill-name` 显式调用本地 skill。\n'
-  printf -- '- 范围：仅个人本地 skills。\n'
-  printf -- '- 排除：系统内置 skills 和插件 skills。\n\n'
+  printf -- '- 范围：仅自建 skills。\n'
+  printf -- '- 排除：系统内置、插件、市场安装、缓存和外部托管 skills。\n\n'
   printf '## Skill 列表\n\n'
 
   found_count=0
 
   while IFS= read -r skill_dir; do
     skill_file="${skill_dir}/SKILL.md"
-    [ -f "$skill_file" ] || continue
+    is_self_built_skill "$skill_dir" || continue
 
     name="$(sed -n 's/^name:[[:space:]]*//p' "$skill_file" | head -n 1)"
     if [ -z "$name" ]; then
       name="$(basename "$skill_dir")"
     fi
 
-    overview="$(overview_for "$name")"
+    overview="$(concise_overview "$(description_for "$skill_file")")"
     trigger="\$${name}"
 
     printf '### %s\n\n' "$name"
@@ -78,12 +180,12 @@ printf '目标文件：%s\n' "$OUTPUT_FILE"
     printf -- '- 概述：%s\n\n' "$(markdown_escape "$overview")"
 
     found_count=$((found_count + 1))
-  done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name '.system' | sort)
+  done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 } > "$TMP_FILE"
 
 mv "$TMP_FILE" "$OUTPUT_FILE"
 
-printf '识别到个人 skills 数量：%s\n' "$found_count"
+printf '识别到自建 skills 数量：%s\n' "$found_count"
 printf '生成中文索引内容\n'
 printf '保存目标文件：%s\n' "$OUTPUT_FILE"
 printf '刷新最后更新时间：%s\n' "$TIMESTAMP"
