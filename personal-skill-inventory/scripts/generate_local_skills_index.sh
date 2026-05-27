@@ -5,7 +5,7 @@ TOOL_NAME="${AI_TOOL_NAME:-Codex}"
 SKILLS_DIR="${AI_SKILLS_DIR:-${SKILLS_DIR:-${CODEX_HOME:-${HOME}/.codex}/skills}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_OUTPUT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-OUTPUT_FILE="${OUTPUT_FILE:-${DEFAULT_OUTPUT_DIR}/LOCAL_SKILLS_INDEX.md}"
+OUTPUT_FILE="${DEFAULT_OUTPUT_DIR}/LOCAL_SKILLS_INDEX.md"
 TIMESTAMP="$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z')"
 TMP_FILE="$(mktemp)"
 

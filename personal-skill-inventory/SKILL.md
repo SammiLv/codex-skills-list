@@ -27,10 +27,9 @@ description: 当用户想列出、审计、总结、记录或更新当前 AI 工
    - 当自动化任务或手动请求需要刷新已保存的索引文件时，运行 `scripts/generate_local_skills_index.sh`。
    - 该脚本是刷新保存文件的可重复入口；如果当前 AI 工具可以直接检查并总结 skills，交互式回答不必依赖脚本。
    - 该脚本适用于将 skills 存为“一级子目录 + `SKILL.md`”的工具。如果其它 AI 工具使用不同格式，应直接检查该工具的原生 skill 注册表；只有确有需要时才添加小型适配器。
-   - 脚本会扫描已解析的当前工具 skills 目录，只整理自建 skills，排除系统、插件、市场安装和缓存目录，打印可见进度，并将 Markdown 写入 `LOCAL_SKILLS_INDEX.md`。
-   - 在 Codex 中运行且用户要求生成或保存清单文件时，写入 `${CODEX_HOME:-~/.codex}/skills/LOCAL_SKILLS_INDEX.md`。
-   - 在其它 AI 工具中运行时，默认将 `LOCAL_SKILLS_INDEX.md` 保存到该工具的个人 skills 根目录，除非用户指定其它输出路径。
-   - 调用方需要把索引保存到其它位置时，可通过 `OUTPUT_FILE` 指定。
+   - 脚本会扫描已解析的当前工具 skills 目录，只整理自建 skills，排除系统、插件、市场安装和缓存目录，打印可见进度，并将 Markdown 固定写入本 skill 目录下的 `LOCAL_SKILLS_INDEX.md`。
+   - 在 Codex 中运行且用户要求生成或保存清单文件时，只写入 `${CODEX_HOME:-~/.codex}/skills/personal-skill-inventory/LOCAL_SKILLS_INDEX.md`。
+   - 在其它 AI 工具中运行时，默认将 `LOCAL_SKILLS_INDEX.md` 保存到该工具的 `personal-skill-inventory` skill 目录，除非用户要求修改脚本以支持其它固定输出位置。
    - 除非单个 shell 脚本无法支持请求的变更，否则不要创建额外辅助脚本。
    - 当用户偏好中文时，保存的索引应优先使用中文 Markdown 格式。
 
@@ -58,4 +57,4 @@ description: 当用户想列出、审计、总结、记录或更新当前 AI 工
 
 ## 资源
 
-- `scripts/generate_local_skills_index.sh`：手动和自动化运行的单一 shell 入口；扫描当前 AI 工具的个人 skills，写入 `LOCAL_SKILLS_INDEX.md`，并打印可见进度。
+- `scripts/generate_local_skills_index.sh`：手动和自动化运行的单一 shell 入口；扫描当前 AI 工具的个人 skills，固定写入本 skill 目录下的 `LOCAL_SKILLS_INDEX.md`，并打印可见进度。
