@@ -66,7 +66,6 @@
 
 ### 产品部周报汇总
 
-- 触发器：`$产品部周报汇总`
+- 触发器：`$weekly-report-summary`
 - 路径：`/Users/sammilv/.codex/skills/weekly-report-summary/SKILL.md`
 - 概述：先将收到的周报归档为钉钉文档，再按"产品部周报汇总"模板生成部门周报汇总。
-
