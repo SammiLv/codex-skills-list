@@ -15,24 +15,63 @@ description: 当用户需要把某个本地 skill 的变更或 skills 根目录�
    - 默认源 skills 根目录为当前工具的 skills 目录。
    - 在 Codex 中通常是 `${CODEX_HOME:-~/.codex}/skills`。
    - 如果用户指定 skill 名称，使用该名称；否则可从当前 skill 目录推断。
-   - 如果用户要求同步根目录文件，例如 `.gitignore`，使用 `--file` 模式。
+   - 如果用户要求同步根目录文件，例如 `.gitignore`，使用 `-file` 模式。
    - 如果用户指定源路径或目标路径，优先使用用户指定内容。
 
 2. 执行同步。
-   - 不带参数运行 `scripts/sync_skill_to_ai_tools.sh` 时，从其它 AI 工具中选择同名 skill 最新的一份，同步回当前工具。
-   - 带 `all` 运行 `scripts/sync_skill_to_ai_tools.sh all` 时，将当前 skill 同步到所有其它 AI 工具。
-   - 带工具名运行 `scripts/sync_skill_to_ai_tools.sh cursor`、`scripts/sync_skill_to_ai_tools.sh trae` 等时，只同步到指定 AI 工具。
-   - 同步指定 skill 时，运行 `scripts/sync_skill_to_ai_tools.sh personal-skill-inventory all` 或 `scripts/sync_skill_to_ai_tools.sh --skill personal-skill-inventory trae`。
-   - 同步根目录文件时，运行 `scripts/sync_skill_to_ai_tools.sh --file .gitignore all` 或 `scripts/sync_skill_to_ai_tools.sh --file .gitignore cursor`。
-   - 向其它工具推送时，脚本会先检查所有工具中的同名 skill；如果当前源不是最新版本，会询问是否继续，避免旧版本误覆盖新版本。
-   - 如果已经明确确认要用当前源覆盖更新版本，可追加 `--force` 跳过询问。
-   - 脚本默认在现有个人 skills 目录之间同步：Codex、Cursor、WorkBuddy、OpenCode、Claude、Trae、Trae CN、Cline、Gemini。
-   - 自动跳过源目录和不存在的目标目录。
-   - 使用 `rsync -a --delete` 保持目标同名 skill 与源目录一致。
-   - 同步根目录文件时，只覆盖目标根目录下的同名文件，不删除目标目录中的其它内容。
+
+   脚本默认在以下个人 skills 目录之间同步：Codex、Cursor、WorkBuddy、OpenCode、Claude、Trae、Trae CN、Cline、Gemini。自动跳过源目录和不存在的目标目录。向其它工具推送时，脚本会先检查所有工具中的同名 skill；如果当前源不是最新版本，会询问是否继续，避免旧版本误覆盖新版本。如果已经明确确认要用当前源覆盖更新版本，可追加 `-force` 跳过询问。
+
+   各 AI 工具的默认 skills 路径如下：
+   - Codex：`${HOME}/.codex/skills`
+   - Cursor：`${HOME}/.cursor/skills`
+   - WorkBuddy：`${HOME}/.workbuddy/skills`
+   - OpenCode：`${HOME}/.config/opencode/skills`
+   - Claude：`${HOME}/.claude/skills`
+   - Trae：`${HOME}/.trae/skills`
+   - Trae CN：`${HOME}/.trae-cn/memory/skills`
+   - Cline：`${HOME}/.cline/skills`
+   - Gemini：`${HOME}/.gemini/skills`
+
+   | 参数 | 说明 |
+   |------|------|
+   | `-to <工具名\|all>` | 推送模式：将当前工具的 skill/文件同步到指定工具或全部工具 |
+   | `-from <工具名\|all>` | 拉取模式：从指定工具或全部工具中选择最新版本拉取到当前工具 |
+   | `-skill <名称>` | 指定要同步的 skill 名称，不加则默认为当前所在 skill |
+   | `-file <文件名>` | 同步 skills 根目录下的指定文件（如 `.gitignore`），不可与 `-skill` 同时使用 |
+   | `-force` | 跳过版本确认，强制用当前源覆盖（谨慎使用） |
+   | `-diff` | 对所有 AI 工具中的同名 skill 进行版本对比，不执行同步 |
+   | `-help, -h` | 查看脚本完整用法说明 |
+
+   ---
+
+   | 使用场景 | 执行示例 |
+   |---------|---------|
+   | 从其它 AI 工具拉取当前目录 skill 到当前工具(自己更新自己) | `sync_skill_to_ai_tools.sh -from all` |
+   | 从其它 AI 工具拉取指定 skill 到当前工具 | `sync_skill_to_ai_tools.sh -from all -skill personal-skill-inventory` |
+   | 从其它 AI 工具拉取根目录文件到当前工具 | `sync_skill_to_ai_tools.sh -from all -file .gitignore` |
+   | 从指定 AI 工具拉取当前目录 skill 到当前工具 | `sync_skill_to_ai_tools.sh -from cursor` |
+   | 从指定 AI 工具拉取指定 skill 到当前工具 | `sync_skill_to_ai_tools.sh -from cursor -skill personal-skill-inventory` |
+   | 从指定 AI 工具拉取其根目录指定文件到当前工具 | `sync_skill_to_ai_tools.sh -from cursor -file .gitignore` |
+   | 将当前目录 skill 同步到所有其它 AI 工具 | `sync_skill_to_ai_tools.sh -to all` |
+   | 将当前目录 skill 只同步到指定 AI 工具 | `sync_skill_to_ai_tools.sh -to cursor` |
+   | 同步指定 skill 到所有其它 AI 工具 | `sync_skill_to_ai_tools.sh -to all -skill personal-skill-inventory` |
+   | 同步指定 skill 到指定 AI 工具 | `sync_skill_to_ai_tools.sh -to trae -skill personal-skill-inventory` |
+   | 同步根目录指定文件到所有其它 AI 工具 | `sync_skill_to_ai_tools.sh -to all -file .gitignore` |
+   | 同步根目录指定文件到指定 AI 工具 | `sync_skill_to_ai_tools.sh -to cursor -file .gitignore` |
+   | 强制用旧版本覆盖新版本 | `sync_skill_to_ai_tools.sh -to all -skill weekly-report-summary -force` |
+   | 对所有 AI 工具中的 skill 进行版本对比 | `sync_skill_to_ai_tools.sh -diff` |
+
+   ---
+
+   - **在终端执行**：`cd ~/.workbuddy/skills/cross-ai-skill-sync/scripts && bash sync_skill_to_ai_tools.sh -to all`
+   - **在 AI 工具中执行**：直接在对话中描述需求，工具会自动调用本 skill 并执行对应命令，无需手动 `cd`。
+
+   - 使用 `rsync -a --delete` 保持目标同名 skill 与源目录一致。同步根目录文件时，只覆盖目标根目录下的同名文件，不删除目标目录中的其它内容。
    - 排除 `.DS_Store` 和 `LOCAL_SKILLS_INDEX.md`，避免把某个工具的本地生成索引覆盖到其它工具。
    - 可通过 `AI_SKILLS_DIR` 指定源 skills 根目录。
    - 支持的工具名：`codex`、`cursor`、`workbuddy`、`opencode`、`claude`、`trae`、`trae-cn`、`cline`、`gemini`。
+
 
 3. 验证结果。
    - 同步后用 `diff -qr --exclude LOCAL_SKILLS_INDEX.md --exclude .DS_Store` 比对源和目标同名 skill。
