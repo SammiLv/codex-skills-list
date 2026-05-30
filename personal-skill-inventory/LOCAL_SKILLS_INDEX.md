@@ -1,6 +1,6 @@
 # Codex 个人本地 Skills 清单
 
-最后更新时间：2026-05-29 19:01:12 CST
+最后更新时间：2026-05-30 19:04:35 CST
 
 本文件仅记录当前由用户自建或个人维护的 Codex skills。范围为 `/Users/sammilv/.codex/skills` 下的自建 skills，不包含系统内置、插件、市场安装、缓存或外部托管的 skills。
 
