@@ -69,8 +69,9 @@ usage() {
 
   sync_skill_to_ai_tools.sh -diff
       对所有 AI 工具中的 skill 进行版本对比。
-      输出格式：skill | 同步状态 | 最新版本工具
+      输出格式：skill | 同步状态 | 份数 | 最新版本工具
       同步状态：同步、不同步
+      份数：该 skill 在多少个 AI 工具中存在
       最新版本工具：记录最新版本所在的工具名
 
 支持的工具名：
@@ -124,8 +125,8 @@ mtime_for() {
 # 差异对比函数
 run_diff_mode() {
   printf '\n=== AI 工具 Skill 版本对比 ===\n'
-  printf '%-40s | %-10s | %s\n' "Skill" "同步状态" "最新版本工具"
-  printf '%-40s-|-%-10s-|-%s\n' "----------------------------------------" "----------" "--------------"
+  printf '%-40s | %-10s | %-8s | %s\n' "Skill" "同步状态" "份数" "最新版本工具"
+  printf '%-40s-|-%-10s-|-%-8s-|-%s\n' "----------------------------------------" "----------" "--------" "--------------"
 
   # 收集所有工具中的所有 skill 名称（使用临时文件存储唯一名称）
   temp_file=$(mktemp)
@@ -153,6 +154,15 @@ run_diff_mode() {
     newest_mtime=0
     newest_tool=""
     sync_status="同步"
+    tool_count=0
+
+    # 统计该 skill 在多少个工具中存在
+    for ((i = 0; i < ${#TOOL_DIRS[@]}; i++)); do
+      root="${TOOL_DIRS[$i]}"
+      [ -d "$root" ] || continue
+      skill_path="$root/$skill_name"
+      [ -d "$skill_path" ] && tool_count=$((tool_count + 1))
+    done
 
     # 第一遍：找出最新版本的工具
     for ((i = 0; i < ${#TOOL_DIRS[@]}; i++)); do
@@ -205,7 +215,7 @@ run_diff_mode() {
       newest_tool=""
     fi
 
-    printf '%-40s | %-10s | %s\n' "$skill_name" "$sync_status" "$newest_tool"
+    printf '%-40s | %-10s | %-8s | %s\n' "$skill_name" "$sync_status" "$tool_count" "$newest_tool"
   done < "${temp_file}.sorted"
 
   # 清理临时文件

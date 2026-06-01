@@ -40,7 +40,7 @@ description: 当用户需要把某个本地 skill 的变更或 skills 根目录�
    | `-skill <名称>` | 指定要同步的 skill 名称，不加则默认为当前所在 skill |
    | `-file <文件名>` | 同步 skills 根目录下的指定文件（如 `.gitignore`），不可与 `-skill` 同时使用 |
    | `-force` | 跳过版本确认，强制用当前源覆盖（谨慎使用） |
-   | `-diff` | 对所有 AI 工具中的同名 skill 进行版本对比，不执行同步 |
+   | `-diff` | 对所有 AI 工具中的同名 skill 进行版本对比（含份数统计），不执行同步 |
    | `-help, -h` | 查看脚本完整用法说明 |
 
    ---
